@@ -1,0 +1,22 @@
+{
+  "name": "prognode",
+  "version": "1.0.0",
+  "description": "",
+  "main": "app.js",
+  "scripts": {
+    "start": "nodemon app.js",
+    "test": "./node_modules/.bin/mocha --reporter spec --exit"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "chai": "^4.2.0",
+    "chai-http": "^4.3.0",
+    "express": "^4.16.4",
+    "jsonwebtoken": "^8.5.1",
+    "mocha": "^6.1.4",
+    "mssql": "^5.1.0",
+    "nodemon": "^1.19.0",
+    "tracer": "^0.9.8"
+  }
+}
