@@ -10,7 +10,12 @@ module.exports = {
         console.log("Get /api/appartments aangeroepen");
 
 
-        const query = "SELECT * FROM Apartment INNER JOIN ";
+        const query = 
+        'SELECT ('+
+        'SELECT a.ApartmentId, Description, '+
+        '(SELECT * FROM DBUser u WHERE u.UserId = a.UserId FOR JSON PATH) AS Landlord, '+
+        '(SELECT * FROM Reservation r WHERE r.ApartmentId = a.ApartmentId FOR JSON PATH) AS Reservations '+
+        'FROM Apartment a FOR JSON PATH) AS result' ;
         database.executeQuery(query, (err, rows) => {
             // handle result or error
             if(err){
@@ -21,7 +26,7 @@ module.exports = {
                 next(errorObject);
             }
             if(rows){
-                res.status(200).json(rows)
+                res.status(200).json({result: rows})
             }
         })
     },
@@ -85,7 +90,15 @@ module.exports = {
                 }
                 next(errorObject);
             }            
-            if(rows){
+            if(rows.length === 0){
+                // Query when through but could not find appartment with id and userId
+                const msg = 'Appartment not found or you have no acces to this appartment';
+                logger.trace(msg);
+                res.status(404).send({
+                    "message" : "Niet gevonden (appartmentId bestaat niet)",
+                    "DateTime" : Date
+                })
+            }if(rows.length !== 0){
                 res.status(200).json({result: rows});
             }
         });
@@ -102,7 +115,8 @@ module.exports = {
         const id = req.params.id;
         const userId = req.userId;
 
-        const query = `UPDATE Apartment SET Apartment.Description = '${appartment.Description}', Apartment.StreetAddress = '${appartment.StreetAddress}', Apartment.PostalCode = '${appartment.PostalCode}', Apartment.City = '${appartment.City}' WHERE Apartment.ApartmentId = ${id} AND UserId=${userId};`;
+        const query = `UPDATE Apartment SET Apartment.Description = '${appartment.Description}', Apartment.StreetAddress = '${appartment.StreetAddress}', Apartment.PostalCode = '${appartment.PostalCode}', Apartment.City = '${appartment.City}' WHERE Apartment.ApartmentId = ${id} AND UserId=${userId};`+
+        `SELECT * FROM Apartment WHERE ApartmentId =${id}`;
 
         database.executeQuery(query, (err, rows) => {
             // handle result or error
@@ -113,20 +127,12 @@ module.exports = {
                 }
                 next(errorObject);
             }if(rows){
-                if(rows.rowsAffected[0] === 0){
-                    // Query when through but could not find appartment with id and userId
-                    const msg = 'Appartment not found or you have no acces to this appartment';
-                    logger.trace(msg);
-                    const errorObject = {
-                        message: msg,
-                        code: 401
-                    }
-                    next(errorObject);
-                }else{
-                res.status(200).json({result: appartment});
+                
+        
+                res.status(200).json({result: rows});
             }
         }
-        })
+        )
     },
 
     deleteAppartment: (req, res, next) => {
@@ -135,6 +141,7 @@ module.exports = {
 
         const userId = req.userId;
         const id = req.params.id;
+
         const query = `DELETE FROM Apartment WHERE Apartment.ApartmentId=${id} AND UserId=${userId}`;
 
         database.executeQuery(query, (err, rows) => {
@@ -151,10 +158,10 @@ module.exports = {
                     // Query when through but could not find appartment with id and userId
                     const msg = 'Appartment not found or you have no acces to this appartment';
                     logger.trace(msg);
-                    const errorObject = {
-                        message: msg,
-                        code: 401
-                    }
+                    res.status(404).send({
+                    "message" : "Niet gevonden (appartmentId bestaat niet)",
+                    "DateTime" : Date
+                })
                     next(errorObject);
                 }else{
                 res.status(200).json({result : rows});

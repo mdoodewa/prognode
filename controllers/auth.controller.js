@@ -6,7 +6,6 @@ const logger = require('../config/appconfig').logger;
 //Creating validator for later use
 const phoneValidator = new RegExp('^06(| |-)[0-9]{8}$');
 const emailValidator = new RegExp("[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?");
-const postcalCodeValidator = new RegExp('/^([\w-]+(?:\.[\w-]+)*)@((?:[\w-]+\.)*\w[\w-]{0,66})\.([a-z]{2,6}(?:\.[a-z]{2})?)$/i');
 
 
 module.exports = {
@@ -41,7 +40,7 @@ module.exports = {
             // Add validators to certain fields
             assert(phoneValidator.test(phoneNumber), 'A valid phoneNumber is required.');
             assert(emailValidator.test(emailAddress), 'A valid address is required.');
-            assert(postcalCodeValidator.test(postalCode), 'A valid postalcode is required.');
+            
 
           } catch (ex) {
             const errorObject = {
@@ -51,7 +50,8 @@ module.exports = {
             return next(errorObject)
           }
 
-        const query = `INSERT INTO DBUser VALUES ( '${user.FirstName}', '${user.LastName}', '${user.StreetAddress}', '${user.PostalCode}', '${user.City}', '${user.DateOfBirth}', '${user.PhoneNumber}', '${user.EmailAddress}', '${user.Password}' )`;
+        const query = `INSERT INTO DBUser VALUES ( '${user.FirstName}', '${user.LastName}', '${user.StreetAddress}', '${user.PostalCode}', '${user.City}', '${user.DateOfBirth}', '${user.PhoneNumber}', '${user.EmailAddress}', '${user.Password}' );`+
+        `SELECT * FROM DBUser WHERE UserId = SCOPE_IDENTITY()`;
 
 
         // Run query and return result
