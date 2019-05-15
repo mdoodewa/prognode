@@ -66,7 +66,7 @@ module.exports = {
               next(errorObject)
             }
             if (rows) {
-              res.status(200).json({ result: rows.recordset })
+              res.status(200).json({ result: rows})
             }
           })
     },
@@ -110,7 +110,7 @@ module.exports = {
             if (rows.length === 0 || req.body.Password !== rows[0].Password) {
               const errorObject = {
                 message: 'Geen toegang: email bestaat niet of password is niet correct!',
-                code: 401
+                code: 412
               }
               next(errorObject)
             } else {

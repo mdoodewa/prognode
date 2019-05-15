@@ -11,11 +11,7 @@ module.exports = {
 
 
         const query = 
-        'SELECT ('+
-        'SELECT a.ApartmentId, Description, '+
-        '(SELECT * FROM DBUser u WHERE u.UserId = a.UserId FOR JSON PATH) AS Landlord, '+
-        '(SELECT * FROM Reservation r WHERE r.ApartmentId = a.ApartmentId FOR JSON PATH) AS Reservations '+
-        'FROM Apartment a FOR JSON PATH) AS result' ;
+        'select a.*, u.firstname, u.lastname, r.startdate, r.enddate, r.status from apartment as a join dbuser as u on u.userid = a.userid join reservation as r on r.apartmentid = a.apartmentid';        ;
         database.executeQuery(query, (err, rows) => {
             // handle result or error
             if(err){
