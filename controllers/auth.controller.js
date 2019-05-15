@@ -1,6 +1,7 @@
 const jwt = require('jsonwebtoken');
 const database = require('../datalayer/mssql.dao');
 const assert = require('assert');
+const logger = require('../config/appconfig').logger;
 
 //Creating validator for later use
 const phoneValidator = new RegExp('^06(| |-)[0-9]{8}$');
@@ -45,7 +46,7 @@ module.exports = {
           } catch (ex) {
             const errorObject = {
               message: 'Validation fails: ' + ex.toString(),
-              code: 2
+              code: 500
             }
             return next(errorObject)
           }

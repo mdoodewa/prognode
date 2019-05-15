@@ -18,7 +18,6 @@ before(() => {
     jwt.sign({ data : payload}, 'secretkey', { expiresIn: 2 * 60}, (err, result)=>{
         if(result){
             token = result
-            console.log(token);
         }
     })
 })
@@ -40,7 +39,21 @@ describe('Appartments post',()=>{
             UserId : '1'
         })
         .end((err, res) => {
-            res.should.have.status(200)
+            res.should.have.status(200);
+            res.body.should.be.a('object');
+
+            const result = res.body.result;
+            result.should.be.an('array').that.has.length(1);
+            const appartment = result[0];
+            appartment.should.have.property('ApartmentId')
+            appartment.should.have.property('Description').equals('beschrijving')
+            appartment.should.have.property('StreetAddress').equals('straatnaam')
+            appartment.should.have.property('PostalCode').equals('4823KK')
+            appartment.should.have.property('City').equals('breda')
+            appartment.should.have.property('UserId').equals(1)
+
+
+            done()
         })
     })
 })

@@ -1,5 +1,6 @@
 const database = require('../datalayer/mssql.dao');
-const logger = require('../datalayer/mssql.dao');
+const logger = require('../config/appconfig').logger;
+const assert = require('assert');
 
 module.exports = {
 
@@ -29,7 +30,30 @@ module.exports = {
         console.log("POST /api/appartments aangeroepen");
 
         const appartment = req.body;
-        const query = `INSERT INTO Apartment VALUES('${appartment.Description}', '${appartment.StreetAddress}', '${appartment.PostalCode}', '${appartment.City}', ${appartment.UserId} )`;
+        const description = req.body.Description;
+        const streetAddress = req.body.StreetAddress;
+        const postalCode = req.body.PostalCode;
+        const city = req.body.City;
+        const userId = req.body.UserId;
+
+        try{
+
+        assert(description, 'Please fill in a description');
+        assert(streetAddress, 'Please fill in a street address');
+        assert(postalCode, 'Please fill in a postalcode');
+        assert(city, 'Please fill in a city');
+        assert(userId, 'Please fill in a user id');
+        } catch(ex){
+            const errorObject = {
+                message : ex.toString(),
+                code : 500
+            }
+            return next(errorObject);
+        }
+
+        
+        const query = `INSERT INTO Apartment VALUES('${appartment.Description}', '${appartment.StreetAddress}', '${appartment.PostalCode}', '${appartment.City}', ${appartment.UserId} );`+
+        "SELECT * FROM Apartment WHERE ApartmentId = SCOPE_IDENTITY() ";
 
         database.executeQuery(query, (err, rows) => {
             // handle result or error
@@ -39,8 +63,9 @@ module.exports = {
                     code: 500
                 }
                 next(errorObject);
-            }else{
-                res.status(200).json({result: 200});
+            }if(rows){
+                res.status(200).json({result: rows});
+
             }
         })
     },
