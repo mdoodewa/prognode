@@ -116,7 +116,7 @@ module.exports = {
             } else {
     
             console.log('Password match, user logged id');
-            console.log(rows.recordset)
+            logger.info(rows)
 
               // Create payload which we put in the token
               // When verifing we can extract the payload from the token

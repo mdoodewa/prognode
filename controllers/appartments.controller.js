@@ -110,6 +110,25 @@ module.exports = {
         const appartment = req.body;
         const id = req.params.id;
         const userId = req.userId;
+        const description = req.body.Description;
+        const streetAddress = req.body.StreetAddress;
+        const postalCode = req.body.PostalCode;
+        const city = req.body.City;
+
+        try{
+
+        assert(description, 'Please fill in a description');
+        assert(streetAddress, 'Please fill in a street address');
+        assert(postalCode, 'Please fill in a postalcode');
+        assert(city, 'Please fill in a city');
+        assert(userId, 'Please fill in a user id');
+        } catch(ex){
+            const errorObject = {
+                message : ex.toString(),
+                code : 500
+            }
+            return next(errorObject);
+        }
 
         const query = `UPDATE Apartment SET Apartment.Description = '${appartment.Description}', Apartment.StreetAddress = '${appartment.StreetAddress}', Apartment.PostalCode = '${appartment.PostalCode}', Apartment.City = '${appartment.City}' WHERE Apartment.ApartmentId = ${id} AND UserId=${userId};`+
         `SELECT * FROM Apartment WHERE ApartmentId =${id}`;
@@ -122,9 +141,7 @@ module.exports = {
                     code: 500
                 }
                 next(errorObject);
-            }if(rows){
-                
-        
+            }if(rows){ 
                 res.status(200).json({result: rows});
             }
         }
@@ -169,9 +186,30 @@ module.exports = {
     createReservation: (req, res, next) => {
 
         const id = req.params.id;
+        const userId = req.body.UserId;
         const reservation = req.body;
+        const startDate = req.body.StartDate
+        const endDate = req.body.EndDate
+        const status = req.body.Status
 
-        const query = `INSERT INTO Reservation VALUES(${id}, '${reservation.StartDate}', '${reservation.EndDate}', '${reservation.Status}', ${reservation.UserId});`;
+        try{
+
+            assert(startDate, 'Please fill in a start date');
+            assert(endDate, 'Please fill in a end date');
+            assert(status, 'Please fill in a status');
+            assert(userId, 'Please fill in a user id')
+            } catch(ex){
+                const errorObject = {
+                    message : ex.toString(),
+                    code : 500
+                }
+                return next(errorObject);
+            }
+
+
+
+        const query = `INSERT INTO Reservation VALUES(${id}, '${reservation.StartDate}', '${reservation.EndDate}', '${reservation.Status}', ${reservation.UserId});`+
+        `SELECT * FROM Reservation WHERE ReservationId = SCOPE_IDENTITY()`;
 
         console.log("POST /api/appartments/:id/reservations");
 
@@ -184,7 +222,7 @@ module.exports = {
                 }
                 next(errorObject);
             }else{
-                res.status(200).json({});
+                res.status(200).json({result: rows});
             }
         })
     },
@@ -204,9 +242,18 @@ module.exports = {
                     code: 500
                 }
                 next(errorObject);
-            }else{
-                res.status(200).json({Result: rows});
+            }if(rows.length === 0){
+                // Query when through but could not find appartment with id
+                const msg = 'Appartment not found';
+                logger.trace(msg);
+                res.status(404).send({
+                    "message" : "Niet gevonden (appartmentId bestaat niet)",
+                    "DateTime" : Date
+                })
+            }if(rows.length !== 0){
+                res.status(200).json({result: rows});
             }
+        
         })
     },
 
@@ -227,8 +274,16 @@ module.exports = {
                     code: 500
                 }
                 next(errorObject);
-            }else{
-                res.status(200).json({Result: rows});
+            }if(rows.length === 0){
+                // Query when through but could not find appartment with id or reservation id
+                const msg = 'Appartment or Reservation was not found';
+                logger.trace(msg);
+                res.status(404).send({
+                    "message" : "Niet gevonden (appartmentId bestaat niet)",
+                    "DateTime" : Date
+                })
+            }if(rows.length !== 0){
+                res.status(200).json({result: rows});
             }
         })        
     },
@@ -242,7 +297,8 @@ module.exports = {
         const Registration = req.body;
         const userId = req.userId;
 
-        const query = `UPDATE Reservation SET Reservation.Status = '${Registration.Status}' WHERE Reservation.reservationId=${rid} AND Reservation.ApartmentId=${id} AND UserId=${userId};`;
+        const query = `UPDATE Reservation SET Reservation.Status = '${Registration.Status}' WHERE Reservation.reservationId=${rid} AND Reservation.ApartmentId=${id} AND UserId=${userId};`+
+        `SELECT * FROM Reservation WHERE ReservationId = ${rid}`;
 
         database.executeQuery(query, (err, rows) => {
             // handle result or error
@@ -253,7 +309,7 @@ module.exports = {
                 }
                 next(errorObject);
             }if(rows){
-                if(rows.rowsAffected[0] === 0){
+                if(rows.length === 0){
                     // Query when through but could not find appartment with id and userId
                     const msg = 'Appartment not found or you have no acces to this appartment';
                     logger.trace(msg);
@@ -262,9 +318,8 @@ module.exports = {
                         code: 401
                     }
                     next(errorObject);
-            }          
-            else{
-                res.status(200).json({});
+            }else{
+                res.status(200).json({result: rows});
             }
         }
         })
